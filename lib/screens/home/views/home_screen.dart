@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gaxiola_final_gastos/screens/add_expense/blocs/create_categorybloc/create_category_bloc.dart';
+import 'package:gaxiola_final_gastos/screens/add_expense/blocs/create_expense_bloc/create_expense_bloc.dart';
 import 'package:gaxiola_final_gastos/screens/add_expense/blocs/get_categories_bloc/get_categories_bloc.dart';
 import 'package:gaxiola_final_gastos/screens/add_expense/views/add_expense.dart';
 import 'package:gaxiola_final_gastos/screens/home/views/main_screen.dart';
@@ -62,7 +63,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 CreateCategoryBloc(FirebaseExpenseRepo()),
                           ),
                           BlocProvider(
-                            create: (context) => GetCategoriesBloc(FirebaseExpenseRepo())..add(GetCategories()),
+                            create: (context) => GetCategoriesBloc(FirebaseExpenseRepo())..add(GetCategories()
+                            ),
+                          ),
+                          BlocProvider(
+                            create: (context) =>
+                                CreateExpenseBloc(FirebaseExpenseRepo()),
                           ),
                         ],
                         child: const AddExpense(),
