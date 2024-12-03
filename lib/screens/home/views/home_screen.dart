@@ -1,15 +1,16 @@
 import 'dart:math';
+
 import 'package:expense_repository/expense_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gaxiola_final_gastos/screens/add_expense/blocs/create_categorybloc/create_category_bloc.dart';
-import 'package:gaxiola_final_gastos/screens/add_expense/blocs/create_expense_bloc/create_expense_bloc.dart';
 import 'package:gaxiola_final_gastos/screens/add_expense/blocs/get_categories_bloc/get_categories_bloc.dart';
 import 'package:gaxiola_final_gastos/screens/add_expense/views/add_expense.dart';
 import 'package:gaxiola_final_gastos/screens/home/blocs/get_expenses_bloc/get_expenses_bloc.dart';
 import 'package:gaxiola_final_gastos/screens/home/views/main_screen.dart';
 
+import '../../add_expense/blocs/create_expense_bloc/create_expense_bloc.dart';
 import '../../stats/stats.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -31,9 +32,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (state is GetExpensesSuccess) {
         return Scaffold(
             bottomNavigationBar: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(30),
-              ),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(30)),
               child: BottomNavigationBar(
                   onTap: (value) {
                     setState(() {
@@ -51,36 +51,38 @@ class _HomeScreenState extends State<HomeScreen> {
                     BottomNavigationBarItem(
                         icon: Icon(CupertinoIcons.graph_square_fill,
                             color: index == 1 ? selectedItem : unselectedItem),
-                        label: ' Stats'),
+                        label: 'Stats')
                   ]),
             ),
             floatingActionButtonLocation:
                 FloatingActionButtonLocation.centerDocked,
             floatingActionButton: FloatingActionButton(
               onPressed: () async {
-               Expense? newExpense = await Navigator.push(
+                Expense? newExpense = await Navigator.push(
                   context,
                   MaterialPageRoute<Expense>(
-                      builder: (BuildContext context) => MultiBlocProvider(
-                            providers: [
-                              BlocProvider(
-                                create: (context) =>
-                                    CreateCategoryBloc(FirebaseExpenseRepo()),
-                              ),
-                              BlocProvider(
-                                create: (context) =>
-                                    GetCategoriesBloc(FirebaseExpenseRepo())
-                                      ..add(GetCategories()),
-                              ),
-                              BlocProvider(
-                                create: (context) =>
-                                    CreateExpenseBloc(FirebaseExpenseRepo()),
-                              ),
-                            ],
-                            child: const AddExpense(),
-                          )),
+                    builder: (BuildContext context) => MultiBlocProvider(
+                      providers: [
+                        BlocProvider(
+                          create: (context) =>
+                              CreateCategoryBloc(FirebaseExpenseRepo()),
+                        ),
+                        BlocProvider(
+                          create: (context) =>
+                              GetCategoriesBloc(FirebaseExpenseRepo())
+                                ..add(GetCategories()),
+                        ),
+                        BlocProvider(
+                          create: (context) =>
+                              CreateExpenseBloc(FirebaseExpenseRepo()),
+                        ),
+                      ],
+                      child: const AddExpense(),
+                    ),
+                  ),
                 );
-                if(newExpense != null) {
+
+                if (newExpense != null) {
                   setState(() {
                     state.expenses.insert(0, newExpense);
                   });
@@ -103,9 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: const Icon(CupertinoIcons.add),
               ),
             ),
-            body: index == 0 
-            ?  MainScreen(state.expenses)
-            : const StatScreen());
+            body: index == 0 ? MainScreen(state.expenses) : const StatScreen());
       } else {
         return const Scaffold(
           body: Center(

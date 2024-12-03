@@ -16,10 +16,10 @@ class Category {
   });
 
   static final empty = Category(
-    categoryId: '',
-    name: '',
-    totalExpenses: 0,
-    icon: '',
+    categoryId: '', 
+    name: '', 
+    totalExpenses: 0, 
+    icon: '', 
     color: 0
   );
 
