@@ -20,7 +20,9 @@ dependencies:
 
   firebase_core: ^2.16.0
   firebase_auth: ^4.5.0
-  cloud_firestore: ^3.1.0  # Si usas Firestore
+  # cloud_firestore: ^3.1.0  # Si usas Firestore
+  cloud_firestore: ^4.17.5
+
 
 
   bloc: ^8.1.2
