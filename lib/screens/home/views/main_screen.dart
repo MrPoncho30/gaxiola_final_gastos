@@ -6,10 +6,53 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Importa FirebaseAuth
 import 'package:gaxiola_final_gastos/screens/home/login_screen.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-class MainScreen extends StatelessWidget {
+class MainScreen extends StatefulWidget {
   final List<Expense> expenses;
   const MainScreen(this.expenses, {super.key});
+
+  @override
+  _MainScreenState createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  late BannerAd _bannerAd;
+  bool _isBannerAdLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBannerAd();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _bannerAd
+        .dispose(); // No olvides liberar el banner cuando ya no lo necesites
+  }
+
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId:
+          'ca-app-pub-3940256099942544/6300978111', // Usa tu propio ID de anuncio
+      size: AdSize.banner,
+      request: AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) {
+          setState(() {
+            _isBannerAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, error) {
+          print('Error al cargar el banner: $error');
+          _isBannerAdLoaded = false;
+        },
+      ),
+    );
+    _bannerAd.load();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +66,7 @@ class MainScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10),
         child: Column(
           children: [
+            // Encabezado
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -69,10 +113,6 @@ class MainScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                // IconButton(
-                //   onPressed: () {},
-                //   icon: const Icon(CupertinoIcons.settings),
-                // ),
                 IconButton(
                   onPressed: () async {
                     await FirebaseAuth.instance.signOut();
@@ -86,6 +126,7 @@ class MainScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 20),
+            // Banner principal
             Container(
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.width / 2,
@@ -117,7 +158,6 @@ class MainScreen extends StatelessWidget {
                   }
 
                   double total = 0.0;
-
                   for (var doc in snapshot.data!.docs) {
                     total += doc['amount'];
                   }
@@ -148,6 +188,7 @@ class MainScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 40),
+            // Transacciones
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -175,7 +216,7 @@ class MainScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
-                itemCount: expenses.length,
+                itemCount: widget.expenses.length,
                 itemBuilder: (context, int i) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
@@ -198,13 +239,13 @@ class MainScreen extends StatelessWidget {
                                       width: 50,
                                       height: 50,
                                       decoration: BoxDecoration(
-                                        color:
-                                            Color(expenses[i].category.color),
+                                        color: Color(
+                                            widget.expenses[i].category.color),
                                         shape: BoxShape.circle,
                                       ),
                                     ),
                                     Image.asset(
-                                      'assets/${expenses[i].category.icon}.png',
+                                      'assets/${widget.expenses[i].category.icon}.png',
                                       scale: 2,
                                       color: const Color.fromARGB(255, 0, 0, 0),
                                     ),
@@ -212,7 +253,7 @@ class MainScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 12),
                                 Text(
-                                  expenses[i].category.name,
+                                  widget.expenses[i].category.name,
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Theme.of(context)
@@ -227,7 +268,7 @@ class MainScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  "\$${expenses[i].amount}.00",
+                                  "\$${widget.expenses[i].amount}.00",
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Theme.of(context)
@@ -238,7 +279,7 @@ class MainScreen extends StatelessWidget {
                                 ),
                                 Text(
                                   DateFormat('dd/MM/yyyy')
-                                      .format(expenses[i].date),
+                                      .format(widget.expenses[i].date),
                                   style: TextStyle(
                                     fontSize: 14,
                                     color:
@@ -256,6 +297,13 @@ class MainScreen extends StatelessWidget {
                 },
               ),
             ),
+            // Banner al final
+            if (_isBannerAdLoaded)
+              Container(
+                alignment: Alignment.center,
+                child: AdWidget(ad: _bannerAd), // Muestra el banner
+                height: 50,
+              ),
           ],
         ),
       ),

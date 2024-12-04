@@ -3,10 +3,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'simple_bloc_observer.dart';
 import './screens/home/login_screen.dart'; // Importa la pantalla de login que vamos a crear
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  MobileAds.instance.initialize(); // Inicializa Google Mobile Ads
+
   Bloc.observer = SimpleBlocObserver();
   runApp(const MainApp()); // Cambiado de MyApp a MainApp
 }

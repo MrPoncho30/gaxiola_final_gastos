@@ -4,6 +4,7 @@ import 'package:gaxiola_final_gastos/screens/home/blocs/get_expenses_bloc/get_ex
 import 'package:gaxiola_final_gastos/screens/home/views/home_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_repository/expense_repository.dart'; // Asegúrate de tener el repo adecuado
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
