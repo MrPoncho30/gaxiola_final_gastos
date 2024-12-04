@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Importa FirebaseAuth
 import 'package:gaxiola_final_gastos/screens/home/login_screen.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart'; // Importa Google Mobile Ads
 
 class MainScreen extends StatefulWidget {
   final List<Expense> expenses;
@@ -20,23 +20,28 @@ class _MainScreenState extends State<MainScreen> {
   late BannerAd _bannerAd;
   bool _isBannerAdLoaded = false;
 
+  late InterstitialAd _interstitialAd;
+  bool _isInterstitialAdLoaded = false;
+
   @override
   void initState() {
     super.initState();
-    _loadBannerAd();
+    _loadBannerAd(); // Carga el banner
+    _loadInterstitialAd(); // Carga el anuncio intersticial
   }
 
   @override
   void dispose() {
     super.dispose();
-    _bannerAd
-        .dispose(); // No olvides liberar el banner cuando ya no lo necesites
+    _bannerAd.dispose(); // Libera el recurso del banner
+    if (_isInterstitialAdLoaded) {
+      _interstitialAd.dispose(); // Libera el recurso del intersticial
+    }
   }
 
   void _loadBannerAd() {
     _bannerAd = BannerAd(
-      adUnitId:
-          'ca-app-pub-3940256099942544/6300978111', // Usa tu propio ID de anuncio
+      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // Reemplaza con tu ID
       size: AdSize.banner,
       request: AdRequest(),
       listener: BannerAdListener(
@@ -47,19 +52,43 @@ class _MainScreenState extends State<MainScreen> {
         },
         onAdFailedToLoad: (ad, error) {
           print('Error al cargar el banner: $error');
-          _isBannerAdLoaded = false;
+          ad.dispose();
         },
       ),
     );
     _bannerAd.load();
   }
 
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: 'ca-app-pub-3940256099942544/1033173712', // Reemplaza con tu ID
+      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          setState(() {
+            _interstitialAd = ad;
+            _isInterstitialAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (error) {
+          print('Error al cargar el intersticial: $error');
+        },
+      ),
+    );
+  }
+
+  void _showInterstitialAd() {
+    if (_isInterstitialAdLoaded) {
+      _interstitialAd.show();
+    } else {
+      print('El anuncio intersticial no está cargado');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Obtén el correo del usuario actual
     User? user = FirebaseAuth.instance.currentUser;
-    String userEmail = user?.email ??
-        'No email'; // Si no hay usuario, muestra un texto por defecto
+    String userEmail = user?.email ?? 'No email';
 
     return SafeArea(
       child: Padding(
@@ -102,7 +131,7 @@ class _MainScreenState extends State<MainScreen> {
                           ),
                         ),
                         Text(
-                          userEmail, // Muestra el correo del usuario
+                          userEmail,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -115,6 +144,7 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 IconButton(
                   onPressed: () async {
+                    _showInterstitialAd(); // Mostrar anuncio antes de cerrar sesión
                     await FirebaseAuth.instance.signOut();
                     Navigator.pushReplacement(
                       context,
@@ -274,17 +304,19 @@ class _MainScreenState extends State<MainScreen> {
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onBackground,
-                                    fontWeight: FontWeight.w400,
                                   ),
                                 ),
+                                const SizedBox(height: 4),
                                 Text(
-                                  DateFormat('dd/MM/yyyy')
-                                      .format(widget.expenses[i].date),
+                                  DateFormat('MM/dd/yyyy').format(
+                                    widget.expenses[i].date,
+                                  ),
                                   style: TextStyle(
-                                    fontSize: 14,
-                                    color:
-                                        Theme.of(context).colorScheme.outline,
-                                    fontWeight: FontWeight.w400,
+                                    fontSize: 12,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onBackground
+                                        .withOpacity(0.6),
                                   ),
                                 ),
                               ],
@@ -297,12 +329,10 @@ class _MainScreenState extends State<MainScreen> {
                 },
               ),
             ),
-            // Banner al final
             if (_isBannerAdLoaded)
-              Container(
-                alignment: Alignment.center,
-                child: AdWidget(ad: _bannerAd), // Muestra el banner
+              SizedBox(
                 height: 50,
+                child: AdWidget(ad: _bannerAd),
               ),
           ],
         ),

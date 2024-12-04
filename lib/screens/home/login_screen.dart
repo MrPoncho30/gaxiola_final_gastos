@@ -16,6 +16,47 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
+  late BannerAd _bannerAd;
+  bool _isBannerAdLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBannerAd();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _bannerAd.dispose();
+    super.dispose();
+  }
+
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId:
+          'ca-app-pub-3940256099942544/6300978111', // Reemplaza con tu ID de anuncio
+      size: AdSize.banner,
+      request: AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) {
+          setState(() {
+            _isBannerAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, error) {
+          print('Error al cargar el banner: $error');
+          ad.dispose();
+          setState(() {
+            _isBannerAdLoaded = false;
+          });
+        },
+      ),
+    );
+    _bannerAd.load();
+  }
+
   // Función para manejar el inicio de sesión
   Future<void> _login() async {
     setState(() {
@@ -116,6 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               try {
                 // Intentar registrar al nuevo usuario
+                //QUIERO DORMIR
                 await FirebaseAuth.instance.createUserWithEmailAndPassword(
                   email: _emailController.text.trim(),
                   password: _passwordController.text.trim(),
@@ -149,47 +191,59 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         title: const Text("Login"),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            _isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: _login,
-                    child: const Text("Login"),
+      body: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-            const SizedBox(height: 20),
-            TextButton(
-              onPressed: _register,
-              child: const Text(
-                'No account? Register here',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.blue,
-                ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _isLoading
+                      ? CircularProgressIndicator()
+                      : ElevatedButton(
+                          onPressed: _login,
+                          child: const Text("Login"),
+                        ),
+                  const SizedBox(height: 20),
+                  TextButton(
+                    onPressed: _register,
+                    child: const Text(
+                      'No account? Register here',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+          if (_isBannerAdLoaded)
+            Container(
+              height: _bannerAd.size.height.toDouble(),
+              width: _bannerAd.size.width.toDouble(),
+              child: AdWidget(ad: _bannerAd),
+            ),
+        ],
       ),
     );
   }
