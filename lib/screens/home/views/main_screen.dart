@@ -4,6 +4,8 @@ import 'package:expense_repository/expense_repository.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Importa FirebaseAuth
+import 'package:gaxiola_final_gastos/screens/home/login_screen.dart';
 
 class MainScreen extends StatelessWidget {
   final List<Expense> expenses;
@@ -11,6 +13,11 @@ class MainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Obtén el correo del usuario actual
+    User? user = FirebaseAuth.instance.currentUser;
+    String userEmail = user?.email ??
+        'No email'; // Si no hay usuario, muestra un texto por defecto
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10),
@@ -51,7 +58,7 @@ class MainScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          "John Doe",
+                          userEmail, // Muestra el correo del usuario
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -62,9 +69,19 @@ class MainScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+                // IconButton(
+                //   onPressed: () {},
+                //   icon: const Icon(CupertinoIcons.settings),
+                // ),
                 IconButton(
-                  onPressed: () {},
-                  icon: const Icon(CupertinoIcons.settings),
+                  onPressed: () async {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.logout),
                 ),
               ],
             ),

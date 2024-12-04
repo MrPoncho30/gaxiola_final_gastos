@@ -1,66 +1,74 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import './views/home_screen.dart'; // Página de inicio después de un login exitoso
+import 'package:flutter/material.dart';
+import 'package:gaxiola_final_gastos/screens/home/blocs/get_expenses_bloc/get_expenses_bloc.dart';
+import 'package:gaxiola_final_gastos/screens/home/views/home_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_repository/expense_repository.dart'; // Asegúrate de tener el repo adecuado
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
-
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  // Función para iniciar sesión con correo electrónico y contraseña
+  // Función para manejar el inicio de sesión
   Future<void> _login() async {
     setState(() {
-      _isLoading = true;
+      _isLoading = true; // Mostrar indicador de carga
     });
 
-    // Validar que los campos no estén vacíos
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, ingresa todos los campos')),
-      );
-      setState(() {
-        _isLoading = false;
-      });
-      return;
-    }
-
     try {
-      // Inicia sesión con Firebase Auth
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+      // Intentar autenticar al usuario
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      // Si el login es exitoso, redirige a la pantalla principal
-      if (userCredential.user != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const HomeScreen(),
-          ), // Página de inicio
-        );
-        // Limpiar los campos
-        _emailController.clear();
-        _passwordController.clear();
+      // Navegar a MyAppView con BlocProvider y obtener los gastos
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: "Expense Tracker",
+            theme: ThemeData(
+              colorScheme: ColorScheme.light(
+                background: Colors.grey.shade100,
+                onBackground: Colors.black,
+                primary: const Color(0xFF00B2E7),
+                secondary: const Color(0xFFE064F7),
+                tertiary: const Color(0xFFFF8D6C),
+                outline: Colors.grey,
+              ),
+            ),
+            home: BlocProvider(
+              create: (context) => GetExpensesBloc(
+                FirebaseExpenseRepo(),
+              )..add(GetExpenses()), // Aquí solicitamos los gastos
+              child: const HomeScreen(),
+            ),
+          ),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      if (e.code == 'user-not-found') {
+        errorMessage = "Usuario no encontrado.";
+      } else if (e.code == 'wrong-password') {
+        errorMessage = "Contraseña incorrecta.";
+      } else {
+        errorMessage = e.message ?? "Ocurrió un error.";
       }
-    } catch (e) {
-      // Mostrar el error específico si ocurre
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text(errorMessage)),
       );
     } finally {
       setState(() {
-        _isLoading = false;
+        _isLoading = false; // Ocultar indicador de carga
       });
     }
   }
@@ -69,45 +77,36 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        title: const Text("Login"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 50),
             TextField(
               controller: _emailController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(),
               ),
-              keyboardType: TextInputType.emailAddress,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             TextField(
               controller: _passwordController,
-              decoration: const InputDecoration(
+              obscureText: true,
+              decoration: InputDecoration(
                 labelText: 'Password',
                 border: OutlineInputBorder(),
               ),
-              obscureText: true,
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _login,
-              child: _isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Login'),
-            ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () {
-                // Aquí puedes agregar la lógica para ir a la pantalla de registro
-              },
-              child: const Text('No tienes una cuenta? Regístrate'),
-            ),
+            _isLoading
+                ? CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: _login,
+                    child: const Text("Login"),
+                  ),
           ],
         ),
       ),
