@@ -73,6 +73,75 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // Función para registrar un nuevo usuario
+  Future<void> _register() async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Register New User'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Cerrar el diálogo
+            },
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              setState(() {
+                _isLoading = true; // Mostrar indicador de carga
+              });
+
+              try {
+                // Intentar registrar al nuevo usuario
+                await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                  email: _emailController.text.trim(),
+                  password: _passwordController.text.trim(),
+                );
+
+                Navigator.pop(context); // Cerrar el diálogo
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Registro exitoso')),
+                );
+              } on FirebaseAuthException catch (e) {
+                String errorMessage = e.message ?? "Ocurrió un error.";
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(errorMessage)),
+                );
+              } finally {
+                setState(() {
+                  _isLoading = false; // Ocultar indicador de carga
+                });
+              }
+            },
+            child: const Text('Register'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,6 +176,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: _login,
                     child: const Text("Login"),
                   ),
+            const SizedBox(height: 20),
+            TextButton(
+              onPressed: _register,
+              child: const Text(
+                'No account? Register here',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.blue,
+                ),
+              ),
+            ),
           ],
         ),
       ),
